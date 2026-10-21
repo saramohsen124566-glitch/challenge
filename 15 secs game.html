@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>15-Second Challenge</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#183053;--panel:#1f3b66;--line:#2f5489;--text:#f9f9f9;--mute:#b5c7de;--zap:#018bce;--hot:#e5484d;--ok:#f9f9f9}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--text);font:16px/1.5 "DM Sans",system-ui,sans-serif;min-height:100vh}
+h1,h2,h3,.big{font-family:"Archivo Black",Impact,sans-serif;font-weight:400;margin:0;line-height:1.05}
+a{color:#f9f9f9}
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+.logo{font-family:"Archivo Black",Impact,sans-serif;font-size:20px;color:#f9f9f9;text-decoration:none}
+button,input,select{font:inherit}
+button{cursor:pointer;border:0;border-radius:10px;padding:10px 16px;font-weight:700;background:#f9f9f9;color:#183053}
+button.alt{background:transparent;color:var(--text);border:2px solid var(--line)}
+button.bad{background:var(--hot);color:#fff}
+button.good{background:#018bce;color:#f9f9f9}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--zap);outline-offset:2px}
+button:disabled{opacity:.4;cursor:not-allowed}
+input,select{background:var(--ink);color:var(--text);border:2px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+.panel{background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:20px}
+.grid{display:grid;grid-template-columns:1.4fr 1fr;gap:18px}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hero{padding:40px 0 24px}
+.hero h1{font-size:clamp(44px,9vw,96px)}
+.hero h1 span{color:var(--zap)}
+.hero p{max-width:560px;color:var(--mute);font-size:18px}
+.cta{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:26px 0}
+@media(max-width:600px){.cta{grid-template-columns:1fr}}
+.cta a{display:block;text-decoration:none;color:#f9f9f9;background:var(--zap);border-radius:18px;padding:22px}
+.cta a.p{background:#f9f9f9;color:#183053}
+.cta b{font-family:"Archivo Black",Impact,sans-serif;font-size:26px;font-weight:400;display:block}
+ol.rules{padding-left:22px}ol.rules li{margin:6px 0}
+.clockbox{text-align:center;padding:10px 0}
+.clock{font-family:"Archivo Black",Impact,sans-serif;font-size:min(34vw,200px);line-height:1;color:#f9f9f9}
+.clock.low{color:var(--hot)}
+.bar{height:12px;border-radius:8px;background:var(--ink);overflow:hidden}
+.bar i{display:block;height:100%;background:#018bce;width:100%}
+.chal{font-family:"Archivo Black",Impact,sans-serif;font-size:clamp(22px,4vw,38px);line-height:1.15;margin:8px 0 10px}
+.tag{display:inline-block;background:var(--ink);border:2px solid var(--line);border-radius:99px;padding:2px 12px;color:var(--mute);font-size:14px}
+.pl{display:flex;align-items:center;gap:8px;padding:10px;border:2px solid var(--line);border-radius:12px;margin-bottom:8px}
+.pl.cur{border-color:var(--zap);background:#254a7e}
+.pl .n{flex:1;font-weight:700;overflow-wrap:anywhere}
+.pl .s{font-family:"Archivo Black",Impact,sans-serif;font-size:26px;min-width:34px;text-align:center}
+.pl button{padding:6px 12px}
+.ans{border-left:4px solid var(--zap);padding:4px 12px;margin:8px 0}
+.mute{color:var(--mute)}
+.msg{padding:14px;border-radius:12px;background:var(--ink);border:2px dashed var(--line);text-align:center;color:var(--mute)}
+.ins{display:grid;gap:8px;margin:12px 0}
+@media(prefers-reduced-motion:no-preference){.clock.low{animation:p .5s infinite alternate}@keyframes p{to{transform:scale(1.05)}}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const KEY='ch15', TIME=15;
+const CHALLENGES=["Name 3 things you should never say to your professor","Name 3 things you find in a backpack","Name 3 excuses for being late","Name 3 things people do when they can’t sleep","Name 3 fruits that are red","Name 3 apps on your phone","Name 3 things you take on a trip","Name 3 famous landmarks","Name 3 things that are round","Name 3 things you do first thing in the morning","Name 3 places you can’t be loud","Name 3 foods you can eat with your hands","Name 3 things you’d bring to a desert island","Name 3 jobs that start with the letter S","Name 3 things that make you laugh","Name 3 school subjects","Name 3 animals that live in the sea","Name 3 things you shouldn’t do in an exam","Name 3 reasons to celebrate","Name 3 things that are cold"];
+const DEF={players:[],cur:null,challenge:'',status:'idle',endsAt:0,answers:[],custom:[],used:[]};
+let S=load(), draft=['','',''], sent=false, me=sessionStorage.getItem('me')||'';
+function load(){try{return Object.assign({},DEF,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){return Object.assign({},DEF)}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){} render()}
+addEventListener('storage',e=>{if(e.key===KEY){S=load();render()}});
+addEventListener('hashchange',render);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const route=()=>location.hash.replace('#','')||'home';
+const pname=id=>(S.players.find(p=>p.id===id)||{}).name||'—';
+
+/* ---------- host actions ---------- */
+function addPlayer(){const i=document.getElementById('np');const n=i.value.trim();if(!n)return;
+  S.players.push({id:'p'+Date.now()+Math.random().toString(36).slice(2,5),name:n,score:0});if(!S.cur)S.cur=S.players[0].id;save()}
+function addCustom(){const i=document.getElementById('nc');const n=i.value.trim();if(!n)return;S.custom.push(n);S.challenge=n;S.answers=[];S.status='idle';save()}
+function pts(id,d){const p=S.players.find(x=>x.id===id);if(p){p.score=Math.max(0,p.score+d);save()}}
+function del(id){if(!confirm('Remove '+pname(id)+'?'))return;S.players=S.players.filter(p=>p.id!==id);if(S.cur===id)S.cur=S.players[0]?S.players[0].id:null;save()}
+function setCur(id){S.cur=id;S.status='idle';S.answers=[];save()}
+function pick(){const all=CHALLENGES.concat(S.custom);let pool=all.filter(c=>!S.used.includes(c));if(!pool.length){S.used=[];pool=all}
+  const c=pool[Math.floor(Math.random()*pool.length)];S.used.push(c);S.challenge=c;S.status='idle';S.answers=[];save()}
+function start(){if(!S.challenge||!S.cur)return;S.status='running';S.endsAt=Date.now()+TIME*1000;S.answers=[];save()}
+function stopT(){S.status='idle';save()}
+function nextPlayer(){const i=S.players.findIndex(p=>p.id===S.cur);S.cur=S.players.length?S.players[(i+1)%S.players.length].id:null;S.status='idle';S.challenge='';S.answers=[]}
+function award(){pts(S.cur,1);S.players.find(p=>p.id===S.cur);nextPlayer();save()}
+function pass(){nextPlayer();save()}
+function resetScores(){if(confirm('Reset all scores to 0?')){S.players.forEach(p=>p.score=0);S.used=[];save()}}
+function clearAll(){if(confirm('Delete everything and start a new game?')){S=Object.assign({},DEF);save()}}
+
+/* ---------- player actions ---------- */
+function joinGroup(){const i=document.getElementById('jn');const n=i.value.trim();if(!n)return;S=load();
+  let p=S.players.find(x=>x.name.toLowerCase()===n.toLowerCase());
+  if(!p){p={id:'p'+Date.now()+Math.random().toString(36).slice(2,5),name:n,score:0};S.players.push(p);if(!S.cur)S.cur=p.id}
+  me=p.id;sessionStorage.setItem('me',me);sent=false;save()}
+function setMe(v){me=v;sessionStorage.setItem('me',v);sent=false;render()}
+function submit(){S=load();S.answers=S.answers.filter(a=>a.pid!==me);S.answers.push({pid:me,list:draft.filter(x=>x.trim())});sent=true;save()}
+
+/* ---------- views ---------- */
+const clockHTML=()=>`<div class="clockbox"><div class="clock" id="clock">${TIME}</div><div class="bar" aria-hidden="true"><i id="fill"></i></div></div>`;
+function topbar(t){return `<div class="top"><a class="logo" href="#">⚡ 15-Second Challenge</a><span class="tag">${t}</span></div>`}
+
+function home(){return `${topbar('Party game')}
+<div class="hero"><h1>Name 3 things.<br><span>15 seconds.</span></h1>
+<p>A fast, loud, funny game. Think quick, stay creative, and get to know each other.</p></div>
+<div class="cta"><a href="#host"><b>I’m the host</b>Manage players, run the timer and award points.</a>
+<a class="p" href="#play"><b>I’m playing</b>See the challenge, watch the clock, type your answers.</a></div>
+<div class="panel"><h2 style="font-size:28px;margin-bottom:12px">How to play</h2>
+<ol class="rules"><li><b>Choose a player.</b> The host reads a challenge to one player.</li>
+<li><b>Start the timer.</b> The player has 15 seconds to think and answer.</li>
+<li><b>Name 3 things</b> that match the challenge before time runs out.</li>
+<li><b>Earn points.</b> Three valid answers in time earns 1 point.</li>
+<li><b>Next player.</b> If time runs out, the turn passes on.</li>
+<li><b>Keep playing</b> until everyone has had a turn. Most points wins!</li></ol>
+<p class="mute"><b>Rules:</b> no repeating an answer in one turn · answers must be relevant · the host decides what counts · cheer each other on.</p>
+<p class="mute"><b>Example:</b> “Name 3 things you should never say to your professor.” Player 1: “I forgot,” “I didn’t study,” “Can I submit it next week?” → 1 point. Player 2: “I don’t know…” time runs out → 0 points.</p></div>`}
+
+function host(){
+  const cur=S.players.find(p=>p.id===S.cur), running=S.status==='running';
+  const sorted=S.players.slice().sort((a,b)=>b.score-a.score);
+  const top=sorted.length&&sorted[0].score>0?sorted[0]:null;
+  return `${topbar('Host panel')}
+<div class="grid"><div>
+<div class="panel">
+ <div class="row" style="justify-content:space-between"><span class="tag">Now playing: <b>${cur?esc(cur.name):'add a player first'}</b></span>
+ <span class="tag" id="st">${S.status==='timeup'?'Time’s up':running?'Running':'Ready'}</span></div>
+ <div class="chal">${S.challenge?esc(S.challenge):'Pick a challenge to begin'}</div>
+ ${clockHTML()}
+ <div class="row" style="justify-content:center;margin-top:10px">
+  <button onclick="pick()" class="alt">🎲 Random challenge</button>
+  ${running?'<button class="bad" onclick="stopT()">Stop</button>':`<button onclick="start()" ${S.challenge&&cur?'':'disabled'}>▶ Start 15s</button>`}
+  <button class="good" onclick="award()" ${cur&&S.challenge?'':'disabled'}>✔ Award point &amp; next</button>
+  <button class="alt" onclick="pass()" ${cur?'':'disabled'}>Pass → next</button>
+ </div>
+ <h3 style="font-size:18px;margin-top:20px">Answers sent by the player</h3>
+ ${S.answers.length?S.answers.map(a=>`<div class="ans"><b>${esc(pname(a.pid))}</b>: ${a.list.map(esc).join(' · ')||'<span class="mute">(empty)</span>'}</div>`).join(''):'<p class="mute">Nothing yet. Players can also just answer out loud.</p>'}
+</div>
+<div class="panel" style="margin-top:18px"><h3 style="font-size:18px;margin-bottom:10px">Add your own challenge</h3>
+ <div class="row"><input id="nc" placeholder="Name 3 things that…" onkeydown="if(event.key==='Enter')addCustom()" style="flex:1"><button onclick="addCustom()">Use it</button></div></div>
+</div>
+<div class="panel"><h2 style="font-size:26px;margin-bottom:4px">Scoreboard</h2>
+ ${top?`<p class="mute" style="margin-top:0">Leading: <b style="color:#f9f9f9">${esc(top.name)}</b> with ${top.score}</p>`:'<p class="mute" style="margin-top:0">Add players or groups below.</p>'}
+ ${S.players.map(p=>`<div class="pl ${p.id===S.cur?'cur':''}"><span class="n">${esc(p.name)}</span>
+  <button class="alt" onclick="pts('${p.id}',-1)" aria-label="Remove a point from ${esc(p.name)}">−</button><span class="s">${p.score}</span>
+  <button onclick="pts('${p.id}',1)" aria-label="Add a point to ${esc(p.name)}">+</button>
+  <button class="alt" onclick="setCur('${p.id}')" title="Make current player">🎤</button>
+  <button class="alt" onclick="del('${p.id}')" aria-label="Remove ${esc(p.name)}">✕</button></div>`).join('')}
+ <div class="row" style="margin-top:12px"><input id="np" placeholder="Player or group name" onkeydown="if(event.key==='Enter')addPlayer()" style="flex:1"><button onclick="addPlayer()">Add</button></div>
+ <div class="row" style="margin-top:14px"><button class="alt" onclick="resetScores()">Reset scores</button><button class="alt" onclick="clearAll()">New game</button></div>
+</div></div>`}
+
+function play(){
+  const mine=me&&me===S.cur, running=S.status==='running';
+  const options=`<option value="">Watch only (big screen)</option>`+S.players.map(p=>`<option value="${p.id}" ${p.id===me?'selected':''}>${esc(p.name)}</option>`).join('');
+  let box;
+  if(mine&&running){box=`<div class="ins">${[0,1,2].map(i=>`<input placeholder="Answer ${i+1}" value="${esc(draft[i])}" oninput="draft[${i}]=this.value;sent=false" autocomplete="off">`).join('')}</div>
+   <button onclick="submit()">${sent?'Sent ✔ (send again to update)':'Send my answers'}</button>`}
+  else if(mine&&S.status==='idle'&&S.challenge){box='<div class="msg">It’s your turn! Wait for the host to start the timer.</div>'}
+  else if(mine&&S.status==='timeup'){box='<div class="msg">Time’s up! The host will decide if your answers count.</div>'}
+  else if(me&&S.cur){box=`<div class="msg">${esc(pname(S.cur))} is playing. Cheer them on! 🎉</div>`}
+  else box='<div class="msg">Pick or type your name or group above to join, or leave it on “Watch only”.</div>';
+  const sorted=S.players.slice().sort((a,b)=>b.score-a.score);
+  return `${topbar('Player screen')}
+<div class="grid"><div class="panel">
+ <label class="mute" for="who">I am</label><select id="who" onchange="setMe(this.value)">${options}</select>
+ <div class="row" style="margin-top:10px"><input id="jn" placeholder="Or type your name / group name to join" onkeydown="if(event.key==='Enter')joinGroup()" style="flex:1" maxlength="30"><button onclick="joinGroup()">Join</button></div>
+ <div class="tag" style="margin-top:14px">Current player: <b>${S.cur?esc(pname(S.cur)):'—'}</b></div>
+ <div class="chal">${S.challenge?esc(S.challenge):'Waiting for the host to pick a challenge…'}</div>
+ ${clockHTML()}${box}</div>
+<div class="panel"><h2 style="font-size:26px;margin-bottom:10px">Scores</h2>
+ ${sorted.length?sorted.map((p,i)=>`<div class="pl ${p.id===S.cur?'cur':''}"><span class="n">${i+1}. ${esc(p.name)}</span><span class="s">${p.score}</span></div>`).join(''):'<p class="mute">No players yet.</p>'}
+</div></div>`}
+
+function render(){
+  const r=route(), app=document.getElementById('app');
+  app.innerHTML=r==='host'?host():r==='play'?play():home();
+  document.title=(r==='host'?'Host · ':r==='play'?'Play · ':'')+'15-Second Challenge';
+  tick();
+}
+function tick(){
+  const c=document.getElementById('clock'); if(!c)return;
+  let left=Math.max(0,(S.endsAt-Date.now())/1000);
+  if(S.status==='running'&&left<=0&&route()==='host'){S.status='timeup';save();return}
+  const show=S.status==='running'?Math.ceil(left):S.status==='timeup'?0:TIME;
+  c.textContent=show; c.classList.toggle('low',S.status!=='idle'&&show<=5);
+  const fl=document.getElementById('fill'); if(fl)fl.style.width=(S.status==='running'?left/TIME*100:S.status==='timeup'?0:100)+'%';
+  const st=document.getElementById('st'); if(st)st.textContent=S.status==='timeup'?'Time’s up':S.status==='running'?'Running':'Ready';
+}
+setInterval(tick,100);
+render();
+</script>
+</body>
+</html>
